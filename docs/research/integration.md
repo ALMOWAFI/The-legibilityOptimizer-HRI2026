@@ -1,5 +1,10 @@
 # Future integration into the group project
 
+> Historical audit of the initial group revision. For the implemented ROS topic
+> pipeline, current lab configuration and teammate handoff, see
+> [the current integration guide](../integration/README.md). The findings below
+> describe the old revision and are retained as research provenance.
+
 Development currently lives in this dedicated optimizer repository. The robot
 is confirmed as **UR5e**. This document records an audit of the separate
 [group repository](https://github.com/ALMOWAFI/HRI2026-Legibility-Of-Robots-Motion)

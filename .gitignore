@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 build/
+*.bag
+*.bag.active
 devel/
 .venv-legibility/
 # LaTeX products belong in build/research; also ignore accidental in-source builds.

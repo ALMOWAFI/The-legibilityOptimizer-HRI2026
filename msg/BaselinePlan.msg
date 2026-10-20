@@ -1,0 +1,12 @@
+std_msgs/Header header
+string trial_id
+int32 target_id
+string condition
+BlockLayout layout
+string planning_group
+string ee_link
+string model_name
+string config_sha256
+string baseline_mode
+moveit_msgs/RobotState start_state
+moveit_msgs/RobotTrajectory trajectory

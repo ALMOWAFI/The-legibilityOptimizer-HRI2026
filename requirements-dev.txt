@@ -1,0 +1,3 @@
+# Offline tests and node-protocol tests; ROS packages are installed separately.
+-r experimental/requirements-legibility.txt
+PyYAML>=5.3,<7

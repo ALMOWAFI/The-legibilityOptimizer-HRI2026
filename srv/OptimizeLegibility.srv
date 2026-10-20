@@ -1,0 +1,17 @@
+# One atomic trial: no separately latched goals or target topics.
+string trial_id
+moveit_msgs/RobotTrajectory baseline
+moveit_msgs/RobotState start_state
+std_msgs/Header goal_header
+geometry_msgs/Point[] goals
+uint32 intended_goal_index
+# False produces a numerical candidate for a separate downstream validator.
+bool preview_validation
+---
+bool solver_success
+bool numerical_accepted
+bool sample_checks_passed
+# Always false. This service does not certify a trajectory for execution.
+bool execution_ready
+moveit_msgs/RobotTrajectory candidate
+string diagnostics

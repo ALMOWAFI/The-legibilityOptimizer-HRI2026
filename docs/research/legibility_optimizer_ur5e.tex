@@ -84,13 +84,16 @@ of the final retimed trajectory remains mandatory.
 The owner has confirmed that the robot is a UR5e; the supplied report's UD5
 designation is retained only in its provenance. The optimizer still requires
 the actual calibrated robot description and tool transforms.
-This code is saved in a dedicated research repository; integration into the
-group project is deferred. Inspection of group-project revision
-\texttt{18a1b66} found ROS~1 Noetic documentation, TODO motion/planner scaffolds,
-and a separate recorded-pose controller tool, which is not included here.
-The installed MoveIt version, planning group, goal frame, FK, collision checker,
-and retimer still require lab verification. See \texttt{integration.md} and
-\texttt{provenance.md} for the group-project audit and source adaptations.
+This code is saved in a dedicated research repository. A separate ROS~1 topic
+integration now connects layout/trial inputs, MoveIt baseline planning, and the
+numerical optimizer. Group revision \texttt{301e123} supplies a fixed block layout
+and a Cartesian predictable-motion tool; its hardware code remains unchanged.
+The supplied lab configuration identifies group \texttt{arm}, tool
+\texttt{arm\_tool0}, and goal frame \texttt{arm\_base\_link}. The robot model is
+loaded through MoveIt rather than replaced with generic UR5 kinematics.
+The installed ROS/MoveIt version and live operation still require verification.
+See \path{../integration/README.md} for the current handoff contract and
+\texttt{provenance.md} for source adaptations.
 
 \section{Introduction}
 
@@ -794,6 +797,51 @@ The first optimizer also uses only end-effector position.
 Future work may incorporate end-effector orientation, velocity,
 observer viewpoint, learned perception models, or alternative
 intent-expressiveness formulations.
+
+\section{ROS 1 Topic Integration and Dense Baselines}
+
+The persistent layout publisher reads the same configuration as the group's
+placement tool. It publishes block identities, poses, frame, tool hover height,
+and a content digest. The planner accepts a trial only with a valid layout and
+snapshots that layout for the complete computation. A layout update alone never
+triggers planning. The configured goal is a tool hover position above a block,
+not the cube-center position.
+
+The planner verifies that the requested runtime planner is an enabled
+\texttt{geometric::RRTConnect} configuration. Cartesian baseline planning is an
+explicitly separate mode. The baseline message contains the full start state,
+joint trajectory, intended target, all candidate goals through the layout, and
+trial/model identifiers. The optimizer publishes an accepted numerical candidate
+on \path{/legibility/optimized_candidate}. Predictable trials bypass optimization.
+This topic is a handoff to a separate retiming and physical-validation stage;
+it is not a controller command. Every candidate has execution readiness false.
+
+Dense trajectories may make service-based FK expensive. The optional support-grid
+adapter solves the same numerical problem on selected original waypoints with
+indices $I$. Let the support offsets be
+\[
+\Delta q_k = q_k^{\star} - q_k^0, \qquad k\in I.
+\]
+The adapter reconstructs the candidate at every original timestamp as
+\[
+\widetilde q_i = q_i^0 +
+\operatorname{interp}\!\left(t_i;\{t_k,\Delta q_k\}_{k\in I}\right).
+\]
+The endpoint offsets are zero, and endpoint configurations are explicitly copied
+to retain exact equality. Bounds, local deviation, motion budget and legibility
+improvement are recomputed on the original dense grid. This is a surrogate solve,
+not a claim of full-dimensional optimality. The original observer model and its
+waypoint-weighted score are unchanged.
+
+\lstinputlisting[language=Python,caption={Support-grid adapter with full-grid acceptance checks}]{../../experimental/legibility_optimizer/sampled_optimizer.py}
+
+The topic integration tests substitute ROS transport, MoveIt planning responses
+and FK while running the real numerical solver. They establish message routing,
+trial/layout consistency, numerical improvement in a synthetic example, endpoint
+preservation and rejection behavior. They do not establish real RRT performance,
+calibrated UR5e feasibility, controller validity or human legibility. The optional
+retimed preview performs discrete checks only. Physical validation and explicit
+execution remain the downstream teammate's responsibility.
 
 \section{Conclusion}
 
