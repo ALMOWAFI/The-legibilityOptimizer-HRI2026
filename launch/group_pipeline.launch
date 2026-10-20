@@ -1,0 +1,22 @@
+<launch>
+  <!-- Optional group dependency. Never starts the group's replay motion_node. -->
+  <arg name="experiment_config" default="$(find hri_legible_motion)/config/experiment.yaml" />
+  <arg name="display" default="true" />
+  <arg name="moveit_ns" default="/" />
+  <arg name="planner_id" default="" />
+  <arg name="planning_pipeline_id" default="ompl" />
+  <arg name="planner_configs_param" default="/move_group/planner_configs" />
+  <arg name="group_planners_param" default="/move_group/arm/planner_configs" />
+  <include file="$(find hri_legibility_preview)/launch/pipeline.launch">
+    <arg name="experiment_config" value="$(arg experiment_config)" />
+    <arg name="moveit_ns" value="$(arg moveit_ns)" />
+    <arg name="planner_id" value="$(arg planner_id)" />
+    <arg name="planning_pipeline_id" value="$(arg planning_pipeline_id)" />
+    <arg name="planner_configs_param" value="$(arg planner_configs_param)" />
+    <arg name="group_planners_param" value="$(arg group_planners_param)" />
+    <arg name="subscribe_group_trials" value="false" />
+  </include>
+  <node if="$(arg display)" pkg="hri_legible_motion" type="display_node.py" name="display_node" output="screen">
+    <rosparam command="load" file="$(arg experiment_config)" />
+  </node>
+</launch>

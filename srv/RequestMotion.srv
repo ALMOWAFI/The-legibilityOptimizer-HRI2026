@@ -1,0 +1,11 @@
+# External executor interface. No implementation is provided by this prototype.
+# Reply promptly after accepting/rejecting; actual events use MotionFeedback.
+string command_id
+string trial_id
+string config_sha256
+# home or run. run requires a fresh, single-use validation_id.
+string operation
+string validation_id
+---
+bool accepted
+string detail

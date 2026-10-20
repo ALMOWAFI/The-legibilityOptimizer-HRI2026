@@ -135,6 +135,8 @@ class TopicOptimizer(TopicWorker):
         super().__init__(runtime, messages, string_type, start_job)
         self.candidate = self.ros.Publisher('/legibility/optimized_candidate', self.messages.OptimizedCandidate,
                                             queue_size=10, latch=False)
+        self.proposal = self.ros.Publisher('/legibility/trajectory_proposal', self.messages.TrajectoryProposal,
+                                          queue_size=10, latch=False)
         self.subscribers = []
         if subscribe:
             self.subscribers.append(self.ros.Subscriber('/legibility/baseline', self.messages.BaselinePlan,
@@ -160,7 +162,8 @@ class TopicOptimizer(TopicWorker):
     def optimize(self, source, ids, goals):
         if source.condition == 'baseline':
             self.report(source.trial_id, source.layout.layout_id, 'optimizer_bypassed', True,
-                        'predictable condition: downstream consumes /legibility/baseline')
+                        'baseline condition: numerical optimization bypassed')
+            self.publish_proposal(source, source.trajectory, False, '{"optimization": "bypassed"}')
             return
         request = self.runtime.services.OptimizeLegibilityRequest()
         request.trial_id, request.baseline, request.start_state = source.trial_id, source.trajectory, source.start_state
@@ -191,5 +194,17 @@ class TopicOptimizer(TopicWorker):
             setattr(output, key, float(metrics[key]))
         output.diagnostics = response.diagnostics
         self.candidate.publish(output)
+        self.publish_proposal(source, output.trajectory, True, output.diagnostics)
         self.report(source.trial_id, source.layout.layout_id, 'candidate_published', True,
                     'numerically accepted; downstream retiming and physical validation required')
+
+    def publish_proposal(self, source, trajectory, optimized, diagnostics):
+        output = self.messages.TrajectoryProposal()
+        output.source, output.trajectory = deepcopy(source), deepcopy(trajectory)
+        output.optimization_applied = optimized
+        output.retiming_required = output.physical_validation_required = True
+        output.execution_ready = False
+        output.diagnostics = diagnostics
+        self.proposal.publish(output)
+        self.report(source.trial_id, source.layout.layout_id, 'proposal_published', True,
+                    'awaiting separate retiming/validation; no execution requested')

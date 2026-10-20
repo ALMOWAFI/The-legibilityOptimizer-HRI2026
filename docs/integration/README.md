@@ -1,5 +1,10 @@
 # Planner → optimizer → downstream handoff
 
+The [connected-session guide](connected-session.md) describes the new optional
+group experiment mode, common trajectory output and downstream service contract.
+Use that mode for the group's `experiment-pipeline` controller; the older
+`/trial_start` bridge below is for simpler zero-bend, uniquely numbered producers.
+
 The two nodes are implemented, with a persistent layout publisher and manual trial
 sender. This package does not execute robot motion. Tests exercise real numerical
 optimization with simulated ROS messages, MoveIt responses and FK. They do not
@@ -17,6 +22,8 @@ ROS names; remap both ends together if your deployment uses different names.
 | `/trial_start` | `hri_legible_motion/TrialInfo` | Optional existing group interface → planner; enable explicitly |
 | `/legibility/baseline` | `BaselinePlan` | Planner → optimizer and downstream baseline consumer |
 | `/legibility/optimized_candidate` | `OptimizedCandidate` | Optimizer → teammate's validation/retiming node |
+| `/legibility/trajectory_proposal` | `TrajectoryProposal` | Final numerical output for either condition → session / downstream validator |
+| `/legibility/motion_feedback` | `MotionFeedback` | External executor (not supplied) → optional group session |
 | `/legibility/status` | `std_msgs/String` containing JSON | Both nodes → operator/logger |
 | `/legibility_preview/planner/display` | `moveit_msgs/DisplayTrajectory` | Planner → RViz |
 
@@ -50,8 +57,9 @@ optimization and do not produce a misleading "optimized" candidate.
 
 ## Teammate's downstream interface
 
-Subscribe to `/legibility/optimized_candidate` with `OptimizedCandidate` for
-legible trials. The `source` field contains the entire `BaselinePlan`; `trajectory`
+Subscribe to `/legibility/trajectory_proposal` with `TrajectoryProposal` for
+both conditions. The separate `/legibility/optimized_candidate` topic retains
+the detailed legible-result message. The `source` field contains the entire `BaselinePlan`; `trajectory`
 contains candidate positions on the original nominal timestamp grid. Velocity,
 acceleration and effort arrays are cleared. Metrics report solver success,
 numerical acceptance, before/after legibility and nominal joint motion cost.
@@ -64,9 +72,9 @@ The publication contract is:
 - All candidate goals and the intended ID travel with the trajectory.
 - A legible trial must not silently fall back to the baseline after optimizer rejection.
 
-For predictable trials, the downstream node consumes `/legibility/baseline` only
-when `condition == "baseline"`. It must not execute every baseline message: those
-with `condition == "legible"` are intermediate optimization inputs.
+For baseline trials, the proposal has `optimization_applied=false`. The baseline
+topic remains diagnostic/intermediate: messages with `condition == "legible"`
+are optimization inputs and must not trigger execution.
 
 The teammate owns retiming, validation against actual measurements/model/scene,
 controller interpolation/dynamic checks, current-start-state checks, final

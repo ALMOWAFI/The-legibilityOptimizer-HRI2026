@@ -24,7 +24,8 @@ MESSAGES = NS(
     BlockLayout=lambda: NS(header=header(), layout_id='', blocks=[], goal_tool_z=0.),
     Block=lambda: NS(id=0, name='', pose=runtime_tests.pose()),
     TrialRequest=lambda: NS(header=header(), trial_id='', target_id=0, condition='', layout_id=''),
-    BaselinePlan=lambda: NS(header=header()), OptimizedCandidate=lambda: NS())
+    BaselinePlan=lambda: NS(header=header()), OptimizedCandidate=lambda: NS(),
+    TrajectoryProposal=lambda: NS(), MotionFeedback=lambda: NS(header=header()))
 
 
 class Publisher:
@@ -36,6 +37,9 @@ class Publisher:
         for callback in self.bus.subscribers.get(self.name, []):
             callback(deepcopy(message))
 
+    def get_num_connections(self):
+        return len(self.bus.subscribers.get(self.name, []))
+
 
 class Bus:
     def __init__(self, params):
@@ -45,6 +49,9 @@ class Bus:
 
     def get_param(self, name, default=None):
         return self.params.get(name, default)
+
+    def is_shutdown(self):
+        return False
 
     def Publisher(self, name, kind, queue_size, latch=False):
         if name not in self.publishers:
@@ -120,6 +127,9 @@ class TopicTests(unittest.TestCase):
         self.assertLessEqual(output.optimized_joint_cost, 1.45 * output.baseline_joint_cost + 1e-7)
         self.assertTrue(output.retiming_required and output.physical_validation_required)
         self.assertFalse(output.execution_ready)
+        self.assertEqual(len(self.optimizer.proposal.sent), 1)
+        self.assertTrue(self.optimizer.proposal.sent[0].optimization_applied)
+        self.assertFalse(self.optimizer.proposal.sent[0].execution_ready)
         self.assertEqual(output.source.layout.layout_id, self.layout.layout_id)
         self.assertEqual(output.source.target_id, 10)
         points = output.trajectory.joint_trajectory.points
@@ -135,6 +145,10 @@ class TopicTests(unittest.TestCase):
             optimize.assert_not_called()
         self.assertEqual(len(self.planner.baseline.sent), 1)
         self.assertEqual(len(self.optimizer.candidate.sent), 0)
+        self.assertEqual(len(self.optimizer.proposal.sent), 1)
+        self.assertFalse(self.optimizer.proposal.sent[0].optimization_applied)
+        np.testing.assert_array_equal(
+            [p.positions for p in self.optimizer.proposal.sent[0].trajectory.joint_trajectory.points], self.q)
         self.assertIn('optimizer_bypassed', self.stages())
 
     def test_missing_layout_unknown_target_and_mismatched_layout_do_not_plan(self):
@@ -197,6 +211,7 @@ class TopicTests(unittest.TestCase):
             self.send(self.trial())
         self.assertEqual(len(self.optimizer.candidate.sent), 0)
         self.assertIn('optimizer_rejected', self.stages())
+        self.assertEqual(len(self.optimizer.proposal.sent), 0)
 
     def test_baseline_metadata_mismatch_and_endpoint_corruption_rejected(self):
         self.send(self.trial('baseline'))

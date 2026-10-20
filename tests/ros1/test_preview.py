@@ -282,7 +282,8 @@ class BoundaryTests(unittest.TestCase):
                     if call == "Publisher":
                         permitted = {'~display': 'DisplayTrajectory', '/hri/block_layout': 'BlockLayout',
                                      '/legibility/trial_request': 'TrialRequest', '/legibility/baseline': 'BaselinePlan',
-                                     '/legibility/optimized_candidate': 'OptimizedCandidate', '/legibility/status': 'string_type'}
+                                     '/legibility/optimized_candidate': 'OptimizedCandidate', '/legibility/status': 'string_type',
+                                     '/legibility/trajectory_proposal': 'TrajectoryProposal'}
                         topic = node.args[0].value
                         self.assertIn(topic, permitted)
                         kind = getattr(node.args[1], 'attr', getattr(node.args[1], 'id', ''))
