@@ -4,7 +4,14 @@ build/
 *.bag
 *.bag.active
 devel/
+install/
+log/
+logs/
+*.proposal
 .venv-legibility/
+.venv-notebook/
+.ipynb_checkpoints/
+notebooks/*.html
 # LaTeX products belong in build/research; also ignore accidental in-source builds.
 docs/research/*.aux
 docs/research/*.log

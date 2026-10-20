@@ -182,7 +182,7 @@ In another sourced terminal, watch status and/or record the handoff before a tri
 ```bash
 rostopic echo /legibility/status
 # Or in another terminal; Ctrl+C finishes the recording:
-rosbag record -O legibility_handoff.bag /hri/block_layout /legibility/trial_request /legibility/baseline /legibility/optimized_candidate /legibility/status
+rosbag record -O legibility_handoff.bag /hri/block_layout /legibility/trial_request /legibility/baseline /legibility/optimized_candidate /legibility/trajectory_proposal /legibility/status
 ```
 
 Send one trial (IDs in the lab config are 0=orange, 1=red, 2=yellow, 3=green):
@@ -197,7 +197,7 @@ group package must be built/sourced and its experiment node must actually publis
 that message. No changes to `place_blocks.py` are needed.
 
 Inspect connections with `rostopic info /legibility/baseline` and
-`rostopic info /legibility/optimized_candidate`. Set RViz's planned-path topic to
+`rostopic info /legibility/trajectory_proposal`. Set RViz's planned-path topic to
 `/legibility_preview/planner/display` for baseline display. The optimizer's output
 is a custom candidate message, not an execution or display command.
 

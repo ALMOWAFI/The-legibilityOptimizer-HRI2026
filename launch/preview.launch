@@ -1,4 +1,6 @@
 <launch>
+  <!-- Developer preview entry point. Use group_pipeline.launch for the lab flow.
+       These launch files share node names; do not start them together. -->
   <!-- Explicit existing group config; no duplicate block coordinates or controllers. -->
   <arg name="experiment_config" />
   <arg name="planner_id" default="" />

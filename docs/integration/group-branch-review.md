@@ -1,5 +1,10 @@
 # Group branch interface review
 
+> Historical review of the revision below. For current lab setup and the
+> implemented experiment controller connection, use the
+> [connected-session guide](connected-session.md). In particular, the old
+> experiment-node TODO finding below does not describe the current group branch.
+
 Inspected published branch: `placing_blocks_pred_motion`, commit
 [`301e1233f5b67f439b5bd541d2903863498e0988`](https://github.com/ALMOWAFI/HRI2026-Legibility-Of-Robots-Motion/tree/301e1233f5b67f439b5bd541d2903863498e0988).
 Remote heads were checked on 2026-10-19. The older local group checkout contains
