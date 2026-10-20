@@ -3,10 +3,10 @@
 | Check | Actual result |
 |---|---|
 | `python -m unittest discover -s tests/experimental -v` | 40 tests passed in 5.151 seconds. Real SLSQP solves, goal posteriors, exact endpoints, bounds/budget/deviation, timestamps and rejection cases. |
-| `python -m unittest discover -s tests/ros1 -v` | 46 tests passed in 5.582 seconds. Real numeric optimization through topic/session callbacks, with simulated ROS transport, MoveIt responses and FK. Includes validation absence, explicit authorization and correlated feedback. |
+| `python -m unittest discover -s tests/ros1 -v` | 56 tests passed in 8.164 seconds. Real numeric optimization through topic/session callbacks, with simulated ROS transport, MoveIt responses and FK. Includes ten data-flow checker cases as well as validation absence, explicit authorization and correlated feedback. |
 | Companion group: `PYTHONPATH=src python -m unittest discover -s test -v` | 30 tests passed in 0.476 seconds, including six optional-session integration tests. |
 | `python -m compileall -q experimental legibility_ros scripts tests` | Passed. |
-| Python 3.8 grammar parsing | Latest check: 11 production Python files in `legibility_ros`/`scripts`, plus the companion group experiment script, parsed successfully. This is not a Python 3.8 runtime test. |
+| Python 3.8 grammar parsing | Latest check: 13 production Python files in `legibility_ros`/`scripts` parsed successfully. The companion group script passed the preceding check. This is not a Python 3.8 runtime test. |
 | Launch/package XML | Parsed successfully. |
 | `python docs/research/build_manuscript.py` (prior manuscript check, 2026-10-20) | Two successful pdflatex passes; 27 pages, eight resolved listing companions. No reported unresolved references, overfull/underfull boxes or missing-character warnings. The session integration did not change those listing sources. |
 | PDF visual inspection | New integration section, interpolation equations and start of the new listing inspected on page 25. |

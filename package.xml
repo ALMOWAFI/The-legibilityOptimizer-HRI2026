@@ -10,6 +10,7 @@
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
   <depend>rospy</depend>
+  <exec_depend>rosgraph</exec_depend>
   <depend>moveit_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>

@@ -146,26 +146,26 @@ roslaunch hri_legibility_preview group_pipeline.launch \
   experiment_config:="$HRI_CONFIG" display:=false
 ```
 
-In another sourced terminal, subscribe **before** sending a trial:
+In another sourced terminal, run the planning-only connection and data check:
 
 ```bash
-rostopic echo /legibility/trajectory_proposal
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition baseline
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition legible
 ```
 
-In a third sourced terminal:
+The check subscribes before publishing a unique trial. It verifies ROS master
+registrations/types, transport connections, a received layout, and matching
+baseline/candidate/proposal messages with preserved endpoints. It prints `PASS`
+only after receiving the required data; failure or timeout exits nonzero.
+Numerical rejection is a failed trial even when transport is connected. These
+commands request no motion and need no downstream executor. `--timeout 300`
+allows more time for FK optimization. Run one check at a time.
 
-```bash
-rosrun hri_legibility_preview send_trial.py \
-  --trial-id lab-baseline-001 --target-id 0 --condition baseline
-rosrun hri_legibility_preview send_trial.py \
-  --trial-id lab-legible-001 --target-id 0 --condition legible
-```
-
-Check `/legibility/status` if either trial is rejected/busy; wait for one trial
-to complete before requesting the next. Expected: one proposal per accepted
-trial, correct condition/goal metadata, exact endpoints, and false execution
-readiness. A rejected legible solve produces no proposal. These commands do
-not request motion and need no downstream executor.
+The layout is static and latched. Trajectories are published per trial, not at a
+continuous frequency. To inspect progress separately, use
+`rostopic echo /legibility/status`; the live robot state is `/joint_states`.
+The graph lookup uses the standard
+[ROS 1 Master API](https://github.com/ros/ros_comm/blob/noetic-devel/tools/rosgraph/src/rosgraph/masterapi.py).
 
 Only after the real downstream services have been implemented and validated:
 
@@ -198,6 +198,6 @@ Those remain lab validation tasks. No third-party implementation was copied
 into the optimizer repository; the existing group module is modified in its own
 repository.
 
-Recorded offline result: **40 numerical tests, 46 ROS-interface tests and 30
+Recorded offline result: **40 numerical tests, 56 ROS-interface tests and 30
 group tests passed** on Python 3.11.9. No live ROS 1/catkin or hardware validation
 was performed.

@@ -63,7 +63,7 @@ class Bus:
         pub = self.publishers.get(name)
         if pub and pub.latch and pub.sent:
             callback(deepcopy(pub.sent[-1]))
-        return NS(name=name)
+        return NS(name=name, get_num_connections=lambda: int(name in self.publishers))
 
 
 class TopicTests(unittest.TestCase):

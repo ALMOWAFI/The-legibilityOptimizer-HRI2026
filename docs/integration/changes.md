@@ -14,6 +14,7 @@
 | `scripts/optimizer_node.py` | Optimizer node entry point. |
 | `scripts/layout_publisher.py` | Persistent latched layout publisher reading the same YAML as group placement. |
 | `scripts/send_trial.py` | Manual planning/optimization trigger with layout binding; no execution option. |
+| `scripts/check_pipeline.py`, `legibility_ros/flow_check.py` | Operator check of actual node/topic registrations, message types, transport, latched layout and correlated per-trial results. Sends one planning-only trial; rejects missing, failed or mismatched output. |
 | `msg/Block.msg` | Paired block identity and cube-center pose. |
 | `msg/BlockLayout.msg` | Layout frame, content ID, blocks and tool goal height. |
 | `msg/TrialRequest.msg` | Trial, intended target, condition and optional expected layout ID. |
@@ -34,6 +35,7 @@
 | `tests/ros1/test_preview.py` | FK, limits, retiming, discrete validation and execution-isolation tests. |
 | `tests/ros1/test_runtime.py` | Actual node callback tests using substituted ROS boundaries. |
 | `tests/ros1/test_topics.py` | End-to-end topic handoff with real SLSQP and simulated MoveIt/FK; failures, snapshots and duplicate trials. |
+| `tests/ros1/test_flow_check.py` | Real-solver flow check, baseline bypass, missing data/registrations, wrong types, rejection, stale trials and corrupted output. |
 | `tests/ros1/test_experiment_client.py` | Session-to-proposal real numerical solve, condition mapping, rejection, service absence, explicit authorization, single-use validation and feedback correlation. |
 | `docs/integration/connected-session.md` | Two-repository build/run commands, exact downstream contract, timing/logging semantics and remaining lab work. |
 | `README.md`, `docs/integration/*` | Current status, connection contract, launch/build/test commands, branch review and downstream ownership. |
