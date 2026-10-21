@@ -1,75 +1,48 @@
-# UR5e Legibility Optimizer
+# UR5e planner and legibility optimizer
 
-Standalone research workspace for the **UR5e FK-based joint-trajectory legibility
-optimizer**. This repository holds the prototype, technical manuscript, offline
-adapter, tests and validation notes while we decide how to integrate it into the
-[group project](https://github.com/ALMOWAFI/HRI2026-Legibility-Of-Robots-Motion).
+**Your contribution to the team is these two nodes. Start with their code:**
 
-**Current status: offline prototype.** No robot commands, ROS launch configuration
-or controller tools are included. Numerical optimization success is separate from
-physical trajectory validity. The robot model is confirmed as UR5e; actual lab
-kinematics, frames, limits, planning group and validation still need connecting.
-
-The eventual architecture is:
+| Open this file | Purpose |
+|---|---|
+| [planner_node.py](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/scripts/planner_node.py) | Receives block poses and a trial request, plans with MoveIt RRT-Connect, and publishes the baseline. |
+| [optimizer_node.py](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/scripts/optimizer_node.py) | Receives the baseline, runs FK-based legibility optimization, and publishes the trajectory proposal. |
+| [pipeline.launch](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/launch/pipeline.launch) | Starts both nodes and the YAML block-pose publisher. |
 
 ```text
-MoveIt / RRT-Connect baseline
-    -> standalone legibility optimizer
-    -> retiming
-    -> robot-specific trajectory validation
-    -> explicit execution
+Block poses + trial request -> planner -> optimizer -> team's validation/execution
 ```
 
-The optimizer uses joint positions as decision variables and injected FK to
-evaluate visible end-effector motion. It preserves start/end configurations and
-nominal timestamps, enforces joint/local-deviation/motion-cost constraints, and
-returns a diagnostic candidate. It never executes a trajectory.
+The links above open the actual node implementations. The ROS package currently
+lives on the [active code branch](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/tree/integration/preview-planner-optimizer);
+it has not been merged into `main`. Use the links rather than searching through
+the older research files on the default branch.
 
-| Location | Contents |
-|---|---|
-| [`experimental/legibility_optimizer`](experimental/legibility_optimizer) | Pure numerical optimizer, offline ROS 1 message adapter, explicit missing robot interfaces and synthetic demo |
-| [`experimental/requirements-legibility.txt`](experimental/requirements-legibility.txt) | NumPy/SciPy dependencies; tests use standard-library `unittest` |
-| [`tests/experimental`](tests/experimental) | Numerical acceptance/rejection, trajectory/message handling and execution-isolation tests |
-| [`docs/research/legibility_optimizer_ur5e.tex`](docs/research/legibility_optimizer_ur5e.tex) | Repaired manuscript with the actual implementation and tests included |
-| [`docs/research/README.md`](docs/research/README.md) | Detailed API contract, setup, build commands and verification results |
-| [`docs/research/integration.md`](docs/research/integration.md) | Historical group-repository audit and proposed future integration boundary |
-| [`docs/research/provenance.md`](docs/research/provenance.md) | Supplied-report provenance, citations, adaptations and reuse record |
+**[Build and run instructions](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/docs/integration/connected-session.md#build-and-first-lab-checks)**
 
-## Run offline
+After building and sourcing the workspace, with the lab MoveIt stack running:
 
-Use an isolated Python environment from this repository's root:
-
-```sh
-python -m venv .venv-legibility
-# Linux/macOS: source .venv-legibility/bin/activate
-# PowerShell: .venv-legibility\Scripts\Activate.ps1
-python -m pip install -r experimental/requirements-legibility.txt
-python -m unittest discover -s tests/experimental -v
-python -m experimental.legibility_optimizer.demo --output build/legibility-demo
+```bash
+roslaunch hri_legibility_preview pipeline.launch \
+  experiment_config:="$(rospack find hri_legible_motion)/config/experiment.yaml"
 ```
 
-Optional plots require Matplotlib. The demo uses synthetic identity FK, not UR5e
-kinematics. See the [research README](docs/research/README.md) for plot commands.
+Check one trial in another sourced terminal:
 
-## Build the manuscript
-
-With `pdflatex` installed:
-
-```sh
-python docs/research/build_manuscript.py
+```bash
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition baseline
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition legible
 ```
 
-The script verifies all seven source listings and builds
-`build/research/legibility_optimizer_ur5e.pdf` in two passes. Generated artifacts
-stay under the ignored `build/` directory.
+Run the checks one at a time. The planner publishes `/legibility/baseline`; the
+optimizer publishes `/legibility/trajectory_proposal`. Neither node executes
+motion. [Exact topic/message contract](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/docs/integration/README.md).
 
-## Future group integration
+**Current status:** 140 offline tests passed for the node cleanup; live ROS/robot
+operation is unverified. The professor's fixed-height 2D requirement is the next
+code change. The current code does not yet enforce a plane, and the plane height
+has not been selected.
 
-Development stays here for now. A first integration milestone is reading a saved
-UR5e MoveIt baseline and comparing baseline/candidate FK paths offline. The group
-project's motion and experiment nodes remain separate work; no code from this
-repository is wired into their hardware execution path.
-
-The original supplied report called the robot "UD5". The owner subsequently
-confirmed **UR5e**, so current project/manuscript naming uses UR5e while provenance
-retains the original report title.
+The [research manuscript and offline prototype guide](docs/research/README.md)
+are background material. The numerical solver, configuration, messages and tests
+are supporting files for the nodes. The game, interface and execution are
+separate team components.
