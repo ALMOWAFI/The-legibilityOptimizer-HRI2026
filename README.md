@@ -1,82 +1,48 @@
-# Planner and optimizer
+# UR5e planner and legibility optimizer
 
-The contribution to the team pipeline is two ROS 1 nodes:
+**Your contribution to the team is these two nodes. Start with their code:**
 
-| File | What it does |
+| Open this file | Purpose |
 |---|---|
-| [scripts/planner_node.py](scripts/planner_node.py) | Receives block layout and trial requests, plans with MoveIt RRT-Connect, and publishes the baseline trajectory. The planning code is in `plan_baseline()`. |
-| [scripts/optimizer_node.py](scripts/optimizer_node.py) | Receives the baseline, runs FK-based legibility optimization, and publishes an accepted trajectory proposal. The optimization callback is `handle_optimize()`. |
-| [launch/pipeline.launch](launch/pipeline.launch) | Starts both nodes and the existing YAML block-layout publisher. |
-
-These node files contain the actual callbacks, topic wiring and startup code.
-The standalone [optimizer mathematics](experimental/legibility_optimizer/optimizer_core.py)
-remain reusable without ROS. Shared robot access and configuration helpers are
-in `legibility_ros/`.
+| [planner_node.py](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/scripts/planner_node.py) | Receives block poses and a trial request, plans with MoveIt RRT-Connect, and publishes the baseline. |
+| [optimizer_node.py](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/scripts/optimizer_node.py) | Receives the baseline, runs FK-based legibility optimization, and publishes the trajectory proposal. |
+| [pipeline.launch](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/launch/pipeline.launch) | Starts both nodes and the YAML block-pose publisher. |
 
 ```text
-Block layout + trial request
-        -> planner_node.py
-        -> /legibility/baseline
-        -> optimizer_node.py
-        -> /legibility/trajectory_proposal
-        -> team's separate validation and execution stage
+Block poses + trial request -> planner -> optimizer -> team's validation/execution
 ```
 
-The nodes never execute motion. For `baseline` trials the optimizer passes the
-baseline through; for `legible` trials it publishes only an accepted optimization.
-Both outputs require downstream retiming and physical validation.
+The links above open the actual node implementations. The ROS package currently
+lives on the [active code branch](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/tree/integration/preview-planner-optimizer);
+it has not been merged into `main`. Use the links rather than searching through
+the older research files on the default branch.
 
-## Run the nodes
+**[Build and run instructions](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/docs/integration/connected-session.md#build-and-first-lab-checks)**
 
-After [building the packages](docs/integration/connected-session.md#build-and-first-lab-checks),
-source the workspace's `devel/setup.bash` in each terminal. With the lab MoveIt
-stack running, use the team's current measured configuration:
+After building and sourcing the workspace, with the lab MoveIt stack running:
 
 ```bash
 roslaunch hri_legibility_preview pipeline.launch \
   experiment_config:="$(rospack find hri_legible_motion)/config/experiment.yaml"
 ```
 
-This launch starts the layout publisher, planner and optimizer. Game, interface
-and execution are separate team components.
-
-## Check the data flow
-
-In another sourced terminal, run these one at a time:
+Check one trial in another sourced terminal:
 
 ```bash
 rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition baseline
 rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition legible
 ```
 
-Each command sends one trial and waits for its matching output. `PASS` means
-that trial crossed the pipeline; a missing connection, rejection or timeout
-produces `FAIL`. Neither command requests execution. Use `--timeout 300` if
-the real FK service needs more time.
+Run the checks one at a time. The planner publishes `/legibility/baseline`; the
+optimizer publishes `/legibility/trajectory_proposal`. Neither node executes
+motion. [Exact topic/message contract](https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026/blob/integration/preview-planner-optimizer/docs/integration/README.md).
 
-| Topic | Publisher -> subscriber |
-|---|---|
-| `/hri/block_layout` | Layout publisher -> planner; retained for new subscribers |
-| `/legibility/trial_request` | Team experiment or check tool -> planner |
-| `/legibility/baseline` | Planner -> optimizer |
-| `/legibility/trajectory_proposal` | Optimizer -> team's downstream stage |
-| `/legibility/status` | Both nodes -> diagnostics |
-| `/legibility_preview/planner/display` | Planner -> RViz |
+**Current status:** 140 offline tests passed for the node cleanup; live ROS/robot
+operation is unverified. The professor's fixed-height 2D requirement is the next
+code change. The current code does not yet enforce a plane, and the plane height
+has not been selected.
 
-Trajectory topics publish when a trial is processed; they are quiet while idle.
-The exact message definitions and handoff requirements are in the
-[topic contract](docs/integration/README.md).
-
-## Offline tests
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -m unittest discover -s tests/experimental -v
-python -m unittest discover -s tests/ros1 -v
-```
-
-The tests use the real numerical solver with substituted ROS/MoveIt boundaries.
-Live ROS and robot operation still need lab verification.
-
-Existing optional [team-session integration](docs/integration/connected-session.md)
-and [downstream execution](docs/integration/execution.md) have their own guides.
+The [research manuscript and offline prototype guide](docs/research/README.md)
+are background material. The numerical solver, configuration, messages and tests
+are supporting files for the nodes. The game, interface and execution are
+separate team components.
