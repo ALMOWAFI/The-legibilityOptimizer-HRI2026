@@ -1,0 +1,22 @@
+<launch>
+  <!-- Developer preview entry point. Use group_pipeline.launch for the lab flow.
+       These launch files share node names; do not start them together. -->
+  <!-- Explicit existing group config; no duplicate block coordinates or controllers. -->
+  <arg name="experiment_config" />
+  <arg name="planner_id" default="" />
+  <arg name="retiming_scale" default="0.2" />
+  <group ns="legibility_preview">
+    <node pkg="hri_legibility_preview" type="optimizer_node.py" name="optimizer" output="screen">
+      <param name="experiment_config" value="$(arg experiment_config)" />
+      <param name="retiming_scale" value="$(arg retiming_scale)" />
+      <param name="support_points" value="11" />
+      <param name="max_joint_deviation_rad" value="0.08" />
+      <param name="cost_ratio" value="1.2" />
+    </node>
+    <node pkg="hri_legibility_preview" type="planner_node.py" name="planner" output="screen">
+      <param name="experiment_config" value="$(arg experiment_config)" />
+      <param name="retiming_scale" value="$(arg retiming_scale)" />
+      <param name="planner_id" value="$(arg planner_id)" />
+    </node>
+  </group>
+</launch>

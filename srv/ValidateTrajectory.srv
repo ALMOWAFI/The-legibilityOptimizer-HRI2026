@@ -1,0 +1,11 @@
+# No motion. Retiming, joint extrema and sampled robot/scene checks.
+# accepted is not continuous collision certification or permission to execute.
+TrajectoryProposal proposal
+# Study duration must be achieved safely or the request must be rejected.
+float64 required_duration
+---
+bool accepted
+# Opaque, single-use identifier binding the exact retimed trajectory and context.
+string validation_id
+float64 duration
+string detail

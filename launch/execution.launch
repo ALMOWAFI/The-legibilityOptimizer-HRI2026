@@ -1,0 +1,12 @@
+<launch>
+  <arg name="experiment_config" />
+  <arg name="execution_config" default="$(find hri_legibility_preview)/config/execution.yaml" />
+  <arg name="enable_execution" default="false" />
+  <arg name="moveit_ns" default="/" />
+  <node pkg="hri_legibility_preview" type="executor_node.py" name="executor" ns="legibility" output="screen" required="true">
+    <param name="experiment_config" value="$(arg experiment_config)" />
+    <param name="execution_config" value="$(arg execution_config)" />
+    <param name="enable_execution" value="$(arg enable_execution)" />
+    <param name="moveit_ns" value="$(arg moveit_ns)" />
+  </node>
+</launch>

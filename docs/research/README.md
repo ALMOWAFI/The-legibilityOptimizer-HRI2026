@@ -1,9 +1,10 @@
 # FK-based legibility optimizer research
 
-This dedicated repository holds the offline experimental optimizer for the
-confirmed **UR5e**. Integration into the group project is deferred. Its ROS nodes,
-launch files and controller tools are not included here. The original supplied
-report used the name UD5; that historical title is retained only in provenance.
+This dedicated repository holds the experimental optimizer for the confirmed
+**UR5e**, together with separate ROS 1 planner/optimizer topic adapters. See the
+[current integration guide](../integration/README.md) for nodes, launch files and
+the downstream contract. Hardware execution remains separate. The original
+supplied report used the name UD5; that historical title remains in provenance.
 
 - [Manuscript source](legibility_optimizer_ur5e.tex)
 - [Repository findings, future connection point and required lab validation](integration.md)
@@ -95,6 +96,9 @@ sampling convention when comparing trials. Retiming may change the score and
 motion cost; evaluate those separately and validate the complete retimed path.
 
 ## Recorded verification
+
+The following records the original offline-core verification. Current integration
+results and their limits are recorded in [verification](../integration/verification.md).
 
 Verification in this standalone repository on 2026-10-14 used Windows, CPython
 3.11.9, NumPy 2.4.4 and SciPy 1.15.3. The complete test run passed **34 tests** in

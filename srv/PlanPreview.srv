@@ -1,0 +1,17 @@
+string trial_id
+int32 target_id
+# cartesian reproduces the group's straight-reach geometry; rrtconnect is distinct.
+string baseline_mode
+bool optimize
+bool preview_validation
+# Empty layout_id selects the configured YAML layout (service use only).
+BlockLayout layout
+---
+bool baseline_planned
+bool numerical_accepted
+bool sample_checks_passed
+bool execution_ready
+moveit_msgs/RobotState start_state
+moveit_msgs/RobotTrajectory baseline
+moveit_msgs/RobotTrajectory candidate
+string diagnostics

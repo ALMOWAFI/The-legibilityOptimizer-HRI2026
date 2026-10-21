@@ -24,6 +24,13 @@ At the owner's request, the research files were then saved in
 as a standalone project. Group ROS nodes, launch files, controller tools and
 package metadata were not copied. Group integration remains future work.
 
+The subsequent ROS integration adds original planner/optimizer topic adapters in
+this dedicated repository. The [current branch review](../integration/group-branch-review.md)
+records the published group interfaces and the supplied configuration snapshot.
+The [pipeline guide](../integration/README.md) supersedes earlier "offline only"
+integration status. Full physical validation and execution remain downstream work;
+no controller path has been added.
+
 | Supplied material | Integrated destination and changes |
 |---|---|
 | `legibility_optimizer_ud5.tex` | [`legibility_optimizer_ur5e.tex`](legibility_optimizer_ur5e.tex): corrected robot naming after owner confirmation; repaired paragraph breaks inside equations, wrapped architecture equations, added readable code listings and correct repository-relative paths. Added group-checkout findings and clearly described numerical versus physical status. Removed unused LaTeX packages, including `caption`, which was missing locally and is unnecessary for `listings` captions. |

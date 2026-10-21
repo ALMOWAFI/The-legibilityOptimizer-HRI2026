@@ -1,0 +1,22 @@
+# Downstream validation policy. Fill commissioning fields from the real lab.
+# Keep this file separate from experiment.yaml; all trial nodes share the latter.
+controller_manager_service: /controller_manager/list_controllers
+controller_name: scaled_pos_joint_traj_controller
+speed_scaling_topic: /speed_scaling_factor
+scene_topic: /move_group/monitored_planning_scene
+validation_ttl: 120.0
+max_sample_dt: 0.02
+max_sample_joint_step: 0.01
+# Same acceptance limits as the planner/optimizer launch defaults.
+beta: 4.0
+cost_ratio: 1.2
+max_joint_deviation: 0.08
+# Cube IDs are checked automatically. Add existing table/environment collision
+# IDs from inspect_execution.py; dimensions/poses must match the measured lab.
+required_world_objects: []
+# Output by inspect_execution.py. Fill after checking calibrated URDF, tool and
+# scene geometry. A mismatch prevents any controller goal.
+commissioned_model_sha256: ''
+# Verify the installed scaled controller uses P/V/A quintic interpolation and
+# commission its startup splice, tolerances and cancellation on the actual stack.
+controller_interpolation_verified: false
