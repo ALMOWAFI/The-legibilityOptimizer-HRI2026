@@ -11,7 +11,8 @@ from unittest.mock import Mock, patch
 import numpy as np
 
 from legibility_ros.layout import layout_digest, snapshot_layout
-from legibility_ros.topics import TopicPlanner, TopicOptimizer
+from scripts.planner_node import PlannerNode, TopicPlanner
+from scripts.optimizer_node import TopicOptimizer
 import test_runtime as runtime_tests
 from test_preview import IdentityFK, seed_state
 
@@ -100,13 +101,15 @@ class TopicTests(unittest.TestCase):
         # Publish BEFORE planner startup to check persistent latched layout semantics.
         self.bus.Publisher('/hri/block_layout', MESSAGES.BlockLayout, 1, latch=True).publish(self.layout)
         self.optimizer = TopicOptimizer(self.engine, MESSAGES, NS, start_job=lambda work: work())
-        self.planner = TopicPlanner(self.engine, MESSAGES, NS, start_job=lambda work: work())
+        self.planning_engine = PlannerNode.__new__(PlannerNode)
+        self.planning_engine.__dict__.update(self.engine.__dict__)
+        self.planner = TopicPlanner(self.planning_engine, MESSAGES, NS, start_job=lambda work: work())
 
     def trial(self, condition='legible', trial_id='trial-1'):
         return NS(header=header(), trial_id=trial_id, target_id=10, condition=condition, layout_id=self.layout.layout_id)
 
     def send(self, trial):
-        with patch('legibility_ros.runtime.FK', return_value=IdentityFK()):
+        with patch('scripts.planner_node.FK', return_value=IdentityFK()):
             self.planner.on_trial(trial)
 
     def stages(self):
@@ -189,7 +192,7 @@ class TopicTests(unittest.TestCase):
         busy.layout_id = replacement.layout_id
         self.planner.on_trial(busy)
         self.assertIn('rejected_busy', self.stages())
-        with patch('legibility_ros.runtime.FK', return_value=IdentityFK()):
+        with patch('scripts.planner_node.FK', return_value=IdentityFK()):
             pending[0]()
         self.assertEqual(self.optimizer.candidate.sent[0].source.layout.layout_id, self.layout.layout_id)
 
@@ -232,7 +235,7 @@ class TopicTests(unittest.TestCase):
 
     def test_group_trial_message_maps_id_condition_and_rejects_nonzero_bend(self):
         request = NS(header=header(), trial_id=42, target_id=10, condition='legible', bend=0.)
-        with patch('legibility_ros.runtime.FK', return_value=IdentityFK()):
+        with patch('scripts.planner_node.FK', return_value=IdentityFK()):
             self.planner.on_group_trial(request)
         self.assertEqual(self.optimizer.candidate.sent[0].source.trial_id, '42')
         request.trial_id, request.bend = 43, 0.2

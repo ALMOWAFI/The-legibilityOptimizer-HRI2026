@@ -28,13 +28,13 @@ class ClientTests(unittest.TestCase):
         self.services = NS(ValidateTrajectory=object, ValidateTrajectoryRequest=NS,
                            RequestMotion=object, RequestMotionRequest=NS)
         self.client = ExperimentClient(self.bus, self.cfg, topic_tests.MESSAGES, self.services, NS, timeout=.3)
-        self.engine.config_sha256 = hashlib.sha256(json_status(self.cfg).encode()).hexdigest()
+        self.fixture.planning_engine.config_sha256 = self.engine.config_sha256 = hashlib.sha256(json_status(self.cfg).encode()).hexdigest()
         self.bus.wait_for_service = Mock()
         self.bus.ServiceProxy = Mock(return_value=Mock(return_value=NS(
             accepted=True, validation_id='validated-1', duration=4., detail='test only')))
 
     def prepare(self, motion='legible'):
-        with patch('legibility_ros.runtime.FK', return_value=IdentityFK()):
+        with patch('scripts.planner_node.FK', return_value=IdentityFK()):
             return self.client.prepare(dict(trial_id=1, target_id=10, motion=motion))
 
     def event(self, state, stamp=100., **overrides):
@@ -73,7 +73,7 @@ class ClientTests(unittest.TestCase):
         self.bus.ServiceProxy.assert_not_called()
 
     def test_mismatched_config_rejected_and_late_output_cannot_complete_retry(self):
-        self.engine.config_sha256 = 'other-config'
+        self.fixture.planning_engine.config_sha256 = self.engine.config_sha256 = 'other-config'
         with self.assertRaisesRegex(RuntimeError, 'configuration'):
             self.prepare('predictable')
         self.assertIsNone(self.client.pending)

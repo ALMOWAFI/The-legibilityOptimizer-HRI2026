@@ -39,7 +39,7 @@ class FlowCheckTests(unittest.TestCase):
                                lambda: (self.state, self.types), self.lines.append)
 
     def run_check(self, condition='legible'):
-        with patch('legibility_ros.runtime.FK', return_value=IdentityFK()):
+        with patch('scripts.planner_node.FK', return_value=IdentityFK()):
             return self.check.run(10, condition, timeout=.15, ready_timeout=.15)
 
     def test_end_to_end_real_solver_receives_all_outputs_even_out_of_order(self):

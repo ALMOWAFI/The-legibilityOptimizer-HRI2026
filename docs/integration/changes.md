@@ -6,12 +6,12 @@
 | `legibility_ros/__init__.py` | Separate ROS integration package; numerical code stays free of ROS imports. |
 | `legibility_ros/contracts.py` | Full-state FK requests, exact bounded cache, frame/link/error checks, loaded limits, derivative clearing, checked retiming and optional discrete validation. |
 | `legibility_ros/layout.py` | Typed layout conversion, canonical content digest, frame/ID/pose/workspace checks and frozen per-trial snapshot. |
-| `legibility_ros/runtime.py` | Actual MoveIt RRT-Connect/Cartesian planning and FK-based optimization operations; explicit namespace, runtime planner verification and separate numerical/preview modes. |
+| `legibility_ros/runtime.py` | Shared loaded robot configuration, FK and validation context. Planning and optimizer callbacks live in the two node scripts. |
 | `legibility_ros/pipeline.py` | Optional retime/sample-check preview orchestration; rejection retains numerical status and never authorizes execution. |
-| `legibility_ros/topics.py` | Layout/trial subscribers, baseline/candidate publishers, group TrialInfo bridge, busy/duplicate handling and explicit rejection status. |
+| `legibility_ros/topics.py` | Shared status reporting and busy/duplicate-trial handling. Node-specific subscriptions and publications live in their node scripts. |
 | `legibility_ros/experiment_client.py` | Optional group-session client: unique attempts, config/layout binding, bounded preparation, separate validation and operator-authorized downstream requests, correlated measured feedback. No controller client. |
-| `scripts/planner_node.py` | Planner node entry point. |
-| `scripts/optimizer_node.py` | Optimizer node entry point. |
+| `scripts/planner_node.py` | Full planner node: layout/trial subscriptions, loaded RRT-Connect selection, MoveIt planning, baseline publication and RViz preview. |
+| `scripts/optimizer_node.py` | Full optimizer node: baseline subscription, FK-based numerical optimization, acceptance/rejection and proposal publication. Calls the standalone mathematical solver. |
 | `scripts/layout_publisher.py` | Persistent latched layout publisher reading the same YAML as group placement. |
 | `scripts/send_trial.py` | Manual planning/optimization trigger with layout binding; no execution option. |
 | `scripts/check_pipeline.py`, `legibility_ros/flow_check.py` | Operator check of actual node/topic registrations, message types, transport, latched layout and correlated per-trial results. Sends one planning-only trial; rejects missing, failed or mismatched output. |

@@ -7,7 +7,7 @@ request. Neither a topic message nor a successful optimization moves the arm.
 
 ## Build and start
 
-Use the two integration branches from the [build guide](connected-session.md#build-and-first-lab-checks).
+Use the two packages from the [build guide](connected-session.md#build-and-first-lab-checks).
 Rebuild **both** catkin packages and source the resulting workspace: the
 `RequestMotion` service has new confirmation and dispatch-deadline fields.
 Do not run clients generated from the old service definition.

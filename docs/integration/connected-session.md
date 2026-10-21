@@ -1,10 +1,9 @@
 # Connected experiment session
 
 The group controller can now use the standalone RRT/FK pipeline through its
-optional `--pipeline` mode. The companion group branch is
-`integration/rrt-optimizer-session`, based on `experiment-pipeline` at
-`1bf40badfaad63932fee37e0a24fde4b2a0e2eee`.
-The optimizer branch is `integration/preview-planner-optimizer`.
+optional `--pipeline` mode. The group integration was merged into its `main`
+branch at `622f9f0961317d81072a1108c990a184f9ac1d05`.
+The optimizer repository uses `integration/preview-planner-optimizer`.
 
 ```text
 same experiment.yaml
@@ -133,7 +132,7 @@ mkdir -p "$HOME/legibility_connected_ws/src"
 cd "$HOME/legibility_connected_ws/src"
 git clone --branch integration/preview-planner-optimizer \
   https://github.com/ALMOWAFI/The-legibilityOptimizer-HRI2026.git hri_legibility_preview
-git clone --branch integration/rrt-optimizer-session \
+git clone --branch main \
   https://github.com/ALMOWAFI/HRI2026-Legibility-Of-Robots-Motion.git hri_legible_motion
 cd "$HOME/legibility_connected_ws"
 rosdep install --from-paths src --ignore-src -y
