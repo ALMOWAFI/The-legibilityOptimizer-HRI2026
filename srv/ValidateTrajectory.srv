@@ -1,4 +1,5 @@
-# No motion. Retiming and complete robot/scene validation belong to the provider.
+# No motion. Retiming, joint extrema and sampled robot/scene checks.
+# accepted is not continuous collision certification or permission to execute.
 TrajectoryProposal proposal
 # Study duration must be achieved safely or the request must be rejected.
 float64 required_duration

@@ -18,6 +18,7 @@ class ClientTests(unittest.TestCase):
         self.fixture = topic_tests.TopicTests()
         self.fixture.setUp()
         self.bus, self.engine = self.fixture.bus, self.fixture.engine
+        self.bus.Time = NS(now=lambda: Duration(100.), from_sec=Duration)
         self.cfg = self.engine.cfg
         self.cfg.update(frame_id=self.engine.frame, blocks=[
             dict(id=b.id, name=b.name, position=[b.pose.position.x, b.pose.position.y, b.pose.position.z])

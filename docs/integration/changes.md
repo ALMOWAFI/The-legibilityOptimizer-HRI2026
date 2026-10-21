@@ -24,8 +24,8 @@
 | `msg/MotionFeedback.msg` | Command/trial/token-correlated measured motion events from an external provider. |
 | `srv/PlanPreview.srv` | Optional direct planning/preview service. |
 | `srv/OptimizeLegibility.srv` | Optional direct numerical/preview optimization service. |
-| `srv/ValidateTrajectory.srv`, `srv/RequestMotion.srv` | Contracts for the teammate's separate validator/executor; providers are intentionally not guessed or implemented. |
-| `launch/group_pipeline.launch` | Connects the standalone pipeline with the group's existing display; excludes the placeholder motion node and legacy trial bridge. |
+| `srv/ValidateTrajectory.srv`, `srv/RequestMotion.srv` | Separate downstream services; requests include human confirmation and a bounded dispatch deadline. Rebuild both packages after this schema change. |
+| `launch/group_pipeline.launch` | Starts the standalone pipeline, downstream node with execution disabled, and optional group display; excludes the placeholder motion node and legacy trial bridge. |
 | `launch/pipeline.launch` | Persistent layout plus both nodes; RRT-Connect default and optional group subscription. |
 | `launch/preview.launch` | Two-node service-oriented preview launch; explicit config path. |
 | `config/experiment.lab.yaml` | User-supplied configuration snapshot, including lab frames and IDs; Git may normalize text line endings. |
@@ -38,11 +38,25 @@
 | `tests/ros1/test_flow_check.py` | Real-solver flow check, baseline bypass, missing data/registrations, wrong types, rejection, stale trials and corrupted output. |
 | `tests/ros1/test_experiment_client.py` | Session-to-proposal real numerical solve, condition mapping, rejection, service absence, explicit authorization, single-use validation and feedback correlation. |
 | `docs/integration/connected-session.md` | Two-repository build/run commands, exact downstream contract, timing/logging semantics and remaining lab work. |
-| `README.md`, `docs/integration/*` | Current status, connection contract, launch/build/test commands, branch review and downstream ownership. |
+| `legibility_execution/__init__.py` | Separate package boundary; never imported by planner/optimizer nodes. |
+| `legibility_execution/trajectory.py` | Checked IPTP retiming/duration scaling, quintic joint extrema, sampled FK/collision/TCP checks, exact slowed reversal. |
+| `legibility_execution/gate.py` | Single-use expiring validation IDs, deduplicated commands, explicit enable/confirmation gates, no queue or automatic retry, fault latch. |
+| `legibility_execution/state.py` | Fresh arm-only joint measurements, timestamps and finite velocity checks; gripper motion cannot trigger onset. |
+| `legibility_execution/ros_node.py` | Downstream ROS services, exact proposal subscription, model/scene/controller checks, confirmed action dispatch, measured completion, cancellation request on faults, checked return. |
+| `scripts/executor_node.py` | Separate downstream entry point; execution disabled unless explicitly enabled. |
+| `scripts/inspect_execution.py` | Read-only model fingerprint, collision-object and controller inspection. |
+| `msg/ValidatedTrajectory.msg` | Exact retimed trajectory, validation/context IDs and report for preview/recording; never a motion trigger. |
+| `launch/execution.launch`, `config/execution.yaml` | Disabled-by-default execution wiring and explicit missing lab commissioning fields. |
+| `tests/execution/test_execution.py` | Polynomial overshoot, sampled validity, scene geometry, model/controller identity, tokens, measurements, deadlines, faults and return checks using fake robot boundaries. |
+| `tests/ros1/test_downstream_preparation.py` | Real solver through downstream retiming/checks, full-state preservation, altered proposal and changed-scene rejection. |
+| `docs/integration/execution.md` | Read-only checks, commissioning and run commands, supported controller behavior and validation limits. |
+| `README.md`, `docs/integration/*` | Current status, connection contract, launch/build/test commands, branch review and downstream responsibilities. |
 | `docs/research/*` | Historical audit marked as such; manuscript integration status updated while preserving original mathematics, citations and listing files. |
 
-No group hardware code was changed. No controller/execution implementation or
-generic UR5 substitute model was added. No robot or participant trial was run.
+No existing group hardware code was changed. The new controller implementation
+is isolated in the opt-in downstream package; no generic UR5 model was added.
+No robot or participant trial was run. Calibrated model, measured scene and
+controller commissioning still require the lab.
 
 The companion group branch changes `scripts/experiment_node.py` to add optional
 `--pipeline` and `--config`, skips cached trajectories in that mode, reuses

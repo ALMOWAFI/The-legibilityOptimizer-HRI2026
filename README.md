@@ -1,4 +1,4 @@
-# UR5e planner and optimizer
+# UR5e connected experiment
 
 Run the nodes, send a trial, check the output. These commands do not move the robot.
 
@@ -22,6 +22,11 @@ This starts:
 - `/legibility_preview/block_layout` — publishes block poses from the shared YAML.
 - `/legibility_preview/planner` — requests a MoveIt RRT-Connect trajectory.
 - `/legibility_preview/optimizer` — optimizes legible trials and publishes the result.
+- `/legibility/executor` — provides retiming/validation and motion services, with execution disabled by default.
+
+The group participant display starts with `display:=true`. Run the interactive
+game/session separately after the lab checks below. Use `downstream:=false` if
+you only need planning/optimization without the downstream node.
 
 ## 2. Check that data goes through
 
@@ -59,6 +64,8 @@ rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition baseli
 | `/legibility/baseline` | Planner → optimizer | When planning succeeds |
 | `/legibility/optimized_candidate` | Optimizer → check/diagnostics | When a legible optimization is accepted |
 | `/legibility/trajectory_proposal` | Optimizer → downstream validation stage | Final output for either accepted condition |
+| `/legibility/validated_trajectory` | Downstream node → preview/logging | After requested validation passes |
+| `/legibility/motion_feedback` | Executor → game/session | Measured onset/completion or failure of a confirmed command |
 | `/legibility/status` | Planner + optimizer → terminal/check tool | Progress or rejection |
 
 **Trajectory topics are quiet while idle.** They are triggered by trials, not a
@@ -78,6 +85,26 @@ rostopic hz /joint_states
 Use only this launch for the connected pipeline. Do not also start the group's
 legacy `hri.launch` or `motion_node.py`.
 
-The check verifies planning/optimization data flow. The teammate's retiming,
-physical validation and explicitly authorized execution stage is still required.
-Live ROS operation has not yet been verified from this development computer.
+## 3. Check the downstream stage without motion
+
+Capture the lab's model, collision objects and controller information:
+
+```bash
+rosrun hri_legibility_preview inspect_execution.py
+```
+
+Set the measured environment collision-object IDs in `config/execution.yaml`.
+The group tools add the cubes; they do not add a table. With the real scene ready:
+
+```bash
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition baseline --validate
+rosrun hri_legibility_preview check_pipeline.py --target-id 0 --condition legible --validate
+```
+
+These commands never request execution. They reject absent geometry, invalid
+paths, failed retiming or a changed scene instead of reporting success.
+
+The software now includes block poses → planner → optimizer → validation/executor
+→ measured feedback → game/display. **Live ROS and robot operation are still
+unverified.** Follow the [execution lab guide](docs/integration/execution.md) to
+check the calibrated model/controller and enable operator-confirmed motion.

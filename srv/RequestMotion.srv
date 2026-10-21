@@ -1,4 +1,4 @@
-# External executor interface. No implementation is provided by this prototype.
+# Downstream executor interface; planner/optimizer never call it.
 # Reply promptly after accepting/rejecting; actual events use MotionFeedback.
 string command_id
 string trial_id
@@ -6,6 +6,10 @@ string config_sha256
 # home or run. run requires a fresh, single-use validation_id.
 string operation
 string validation_id
+# Must follow an interactive human confirmation in the experiment controller.
+bool operator_confirmed
+# Latest ROS time at which a controller goal may be dispatched. Never queued.
+time dispatch_deadline
 ---
 bool accepted
 string detail

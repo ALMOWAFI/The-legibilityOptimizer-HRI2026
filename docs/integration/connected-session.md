@@ -14,14 +14,14 @@ same experiment.yaml
        → RRT-Connect planner → /legibility/baseline
        → optimizer (baseline bypass OR accepted FK optimization)
        → /legibility/trajectory_proposal
-       → external retimer / physical validator [provider still required]
+       → downstream retiming / configured robot and scene checks
        → operator types go
-       → external executor [provider still required]
+       → separately enabled executor
        → /legibility/motion_feedback → experiment scoring / logs
 ```
 
-The new launch file starts layout, planner, optimizer and optionally the existing
-participant display. It does **not** start the group's placeholder replay
+The new launch file starts layout, planner, optimizer, the downstream node with
+execution disabled, and optionally the existing participant display. It does **not** start the group's placeholder replay
 `motion_node.py`. The normal group mode remains available independently. Never
 start the two motion/session modes together. The legacy `/trial_start` bridge is
 disabled in the new launch; the session does not publish `/trial_start` or
@@ -67,33 +67,36 @@ Downstream should use the proposal as its single final input and must not execut
 the intermediate baseline of a legible trial. Proposals are not latched; start
 consumers before requesting trials. ROS transport is not a durable queue.
 
-## Friend's remaining interfaces
+## Downstream interfaces
 
-Message/service definitions are included; **no provider is implemented**.
-The session fails explicitly when a service is absent, rejects a request, or
-does not answer within its timeout. A successful numerical solve cannot satisfy
-these interfaces by itself.
+`legibility_execution` now implements these services in a separate node. The
+[execution lab guide](execution.md) gives the checks, commissioning fields and
+commands. The session fails when a service is absent, rejects a request, or does
+not answer within its timeout. Numerical success alone never authorizes motion.
 
 | Endpoint | Type | Required provider behavior |
 |---|---|---|
 | `/legibility/validate_trajectory` | `ValidateTrajectory` service | No motion. Retime, validate, and store the exact approved path; return a fresh single-use `validation_id` and duration, or reject. |
 | `/legibility/request_motion` | `RequestMotion` service | Accept/reject a separately authorized `home` or `run` command promptly. Enforce command/token deduplication. A `run` needs the exact stored validation token. |
 | `/legibility/motion_feedback` | `MotionFeedback` topic | Actual robot events with matching command, trial and validation IDs and measured ROS timestamps. Never synthesize onset from a planning result or controller request. |
+| `/legibility/validated_trajectory` | `ValidatedTrajectory` topic | Exact retimed trajectory and validation/context IDs for preview and recording; not an execution command. |
 
-The validator must bind its token to the full proposal, actual calibrated model,
+The validator binds its token to the full proposal, loaded model,
 joint order, frames, tool, measurements, scene/attachments, timing and final
-trajectory. Check collisions over the executed interpolation, joint and
+trajectory. It checks sampled collisions over quintic interpolation, joint and
 velocity/acceleration constraints, TCP workspace/orientation/speed, goal and
-start tolerances, and the cost/deviation/observer metrics affected by retiming.
+start tolerances, and the knot-based cost/deviation/observer metrics affected by retiming.
 The requested study duration must be achieved safely or rejected; the session
-does not force a four-second path by rescaling unchecked timestamps.
+does not force a four-second path by rescaling unchecked timestamps. Discrete
+collision and numerical TCP checks are not continuous physical certification.
 
-The executor must independently verify token freshness, current start state,
+The executor independently verifies token freshness, current start state,
 configuration/model/scene compatibility and controller availability immediately
-before dispatch. It must execute the exact stored validated trajectory, reject
-expired/used tokens and concurrent commands, and handle faults/cancellation with
-the real hardware stack. A `home` request requires its own checked motion and
-operator authorization; it is not permission for an unchecked direct move.
+before dispatch. It sends the exact stored validated trajectory, rejects
+expired/used tokens and concurrent commands, and requests cancellation on faults.
+Controller behavior and cancellation still require testing on the real stack.
+A `home` request reverses only the last completed validated curve in an unchanged
+scene, after separate operator authorization; arbitrary direct moves reject.
 Do not infer robot validity from the config hash alone.
 
 For a reach, feedback order is `executing → done` or `failed`. `executing` is
@@ -167,16 +170,18 @@ continuous frequency. To inspect progress separately, use
 The graph lookup uses the standard
 [ROS 1 Master API](https://github.com/ros/ros_comm/blob/noetic-devel/tools/rosgraph/src/rosgraph/masterapi.py).
 
-Only after the real downstream services have been implemented and validated:
+Only after completing the [execution lab checks](execution.md), including the
+measured scene and installed controller checks, enable execution in the launch:
 
 ```bash
-# Launch group_pipeline.launch with display:=true, then a separate terminal:
+# Launch group_pipeline.launch with display:=true enable_execution:=true,
+# using the reviewed execution_config, then a separate interactive terminal:
 export HRI_CONFIG="$(rospack find hri_legible_motion)/config/experiment.yaml"
 rosrun hri_legible_motion experiment_node.py P07 --pipeline --config "$HRI_CONFIG"
 ```
 
-The interactive session is a future hardware integration entry point, not an
-instruction to run an unvalidated robot today. Missing services fail explicitly.
+The interactive session requires an operator. Missing commissioning data,
+services, validation, confirmation or measured feedback fails explicitly.
 
 ## Verification and limits
 
@@ -186,6 +191,7 @@ Offline commands:
 # Optimizer repository:
 python -m unittest discover -s tests/experimental -v
 python -m unittest discover -s tests/ros1 -v
+python -m unittest discover -s tests/execution -v
 # Group repository:
 PYTHONPATH=src python -m unittest discover -s test -v
 ```
@@ -198,6 +204,5 @@ Those remain lab validation tasks. No third-party implementation was copied
 into the optimizer repository; the existing group module is modified in its own
 repository.
 
-Recorded offline result: **40 numerical tests, 56 ROS-interface tests and 30
-group tests passed** on Python 3.11.9. No live ROS 1/catkin or hardware validation
-was performed.
+No live ROS 1/catkin or hardware validation was performed on this development
+computer. See the pull request for the recorded offline test results.

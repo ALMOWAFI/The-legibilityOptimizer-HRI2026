@@ -270,12 +270,17 @@ class BoundaryTests(unittest.TestCase):
     def test_runtime_has_no_controller_clients_and_only_declared_publishers(self):
         forbidden = {"execute", "go", "move", "send_goal", "SimpleActionClient", "pick", "place"}
         for path in list((ROOT / "legibility_ros").glob("*.py")) + list((ROOT / "scripts").glob("*.py")):
+            # Only these entrypoints may import the separate execution package.
+            # The planner/optimizer packages retain all controller-call guards.
+            downstream_entry = path.name in {'executor_node.py', 'inspect_execution.py'}
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     self.assertFalse({n.name.split('.')[0] for n in node.names} & {"actionlib", "control_msgs"})
                 if isinstance(node, ast.ImportFrom):
                     self.assertNotIn((node.module or '').split('.')[0], {"actionlib", "control_msgs"})
+                    if not downstream_entry:
+                        self.assertNotEqual((node.module or '').split('.')[0], 'legibility_execution')
                 if isinstance(node, ast.Call):
                     call = getattr(node.func, "attr", getattr(node.func, "id", ""))
                     self.assertNotIn(call, forbidden, str(path))

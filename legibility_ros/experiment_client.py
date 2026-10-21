@@ -1,7 +1,7 @@
 """Optional group-session adapter. No controller client or safety implementation.
 
 Preparation uses the ordinary planner/optimizer topics. Validation and explicitly
-requested motion require separately implemented services; absence is an error.
+requested motion use the separate downstream services; absence is an error.
 ROS dependencies are injected in tests and imported only at construction.
 """
 from copy import deepcopy
@@ -204,6 +204,9 @@ class ExperimentClient:
         request = self.srv.RequestMotionRequest()
         request.command_id, request.operation = uuid.uuid4().hex, operation
         request.config_sha256 = self.config_sha256
+        request.operator_confirmed = True
+        request.dispatch_deadline = self.ros.Time.from_sec(
+            self.ros.Time.now().to_sec() + (7.0 if operation == 'run' else 25.0))
         request.trial_id = self.proposal.source.trial_id if operation == 'run' else ''
         request.validation_id = self.validation_id if operation == 'run' else ''
         with self.lock:

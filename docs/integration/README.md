@@ -6,7 +6,9 @@ Use that mode for the group's `experiment-pipeline` controller; the older
 `/trial_start` bridge below is for simpler zero-bend, uniquely numbered producers.
 
 The two nodes are implemented, with a persistent layout publisher and manual trial
-sender. This package does not execute robot motion. Tests exercise real numerical
+sender. Those nodes never execute robot motion. The separate, opt-in
+[downstream node](execution.md) now implements validation and execution services.
+Tests exercise real numerical
 optimization with simulated ROS messages, MoveIt responses and FK. They do not
 establish that RRT-Connect or the calibrated UR5e works in the lab installation.
 
@@ -23,7 +25,7 @@ ROS names; remap both ends together if your deployment uses different names.
 | `/legibility/baseline` | `BaselinePlan` | Planner → optimizer and downstream baseline consumer |
 | `/legibility/optimized_candidate` | `OptimizedCandidate` | Optimizer → teammate's validation/retiming node |
 | `/legibility/trajectory_proposal` | `TrajectoryProposal` | Final numerical output for either condition → session / downstream validator |
-| `/legibility/motion_feedback` | `MotionFeedback` | External executor (not supplied) → optional group session |
+| `/legibility/motion_feedback` | `MotionFeedback` | Separate executor → optional group session |
 | `/legibility/status` | `std_msgs/String` containing JSON | Both nodes → operator/logger |
 | `/legibility_preview/planner/display` | `moveit_msgs/DisplayTrajectory` | Planner → RViz |
 
@@ -76,14 +78,13 @@ For baseline trials, the proposal has `optimization_applied=false`. The baseline
 topic remains diagnostic/intermediate: messages with `condition == "legible"`
 are optimization inputs and must not trigger execution.
 
-The teammate owns retiming, validation against actual measurements/model/scene,
-controller interpolation/dynamic checks, current-start-state checks, final
-score/cost evaluation after retiming, and explicitly authorized execution of the
-exact validated trajectory. If downstream modifies positions or timestamps, it
-must repeat the affected checks. The historical `robot_interfaces.py` execution
-and full-validation stubs still raise explicitly; no new execution implementation
-is provided here. Sample checks in the optional preview path are not a physical
-validity certificate.
+The separate [downstream node](execution.md) now implements retiming, configured
+model/scene checks, retimed knot metrics, current-start checks and confirmed
+execution of the stored path. The teammate's measurements are still needed to
+verify the actual environment, tool and controller. The historical
+`robot_interfaces.py` stubs remain explicit failures inside the standalone
+prototype; they are not the downstream ROS backend. Sampled checks are not a
+continuous physical-validity certificate.
 
 If ground-truth measurements change block goals or their coordinate frame, feed
 those into a valid **input layout before planning/optimization**. A downstream

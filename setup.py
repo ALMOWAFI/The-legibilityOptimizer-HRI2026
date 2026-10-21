@@ -2,5 +2,5 @@ from setuptools import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 setup(**generate_distutils_setup(
-    packages=["experimental", "experimental.legibility_optimizer", "legibility_ros"],
+    packages=["experimental", "experimental.legibility_optimizer", "legibility_ros", "legibility_execution"],
     package_dir={"": "."}))
